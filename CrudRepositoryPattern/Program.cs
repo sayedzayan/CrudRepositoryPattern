@@ -1,3 +1,5 @@
+using CrudRepositoryPattern.Core;
+using CrudRepositoryPattern.Core.Repositories;
 using CrudRepositoryPattern.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +15,10 @@ builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("CrudRepo");
 builder.Services.AddDbContext<ApiDbContext>(options =>
 options.UseSqlServer(connectionString));
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+
 
 var app = builder.Build();
 

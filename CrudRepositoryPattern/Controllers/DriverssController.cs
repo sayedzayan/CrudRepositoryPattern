@@ -1,4 +1,6 @@
-﻿using CrudRepositoryPattern.Data;
+﻿using CrudRepositoryPattern.Core;
+using CrudRepositoryPattern.Core.Repositories;
+using CrudRepositoryPattern.Data;
 using CrudRepositoryPattern.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,44 +13,13 @@ namespace CrudRepositoryPattern.Controllers
     public class DriverssController : ControllerBase
     {
 
-        //before doing dbcontext
-        //private static List<Driver> _drivers = new List<Driver>()
-        //{
-        //    new Driver()
-        //    {
-        //        Id = 1,
-        //        Name="sayed",
-        //        Team="Benz",
-        //        DriverNumber=640
-        //    },
-        //    new Driver()
-        //    {
-        //        Id = 2,
-        //        Name="mohamed",
-        //        Team="BMW",
-        //        DriverNumber=200
-        //    },
-        //    new Driver()
-        //    {
-        //        Id = 3,
-        //        Name="zayan",
-        //        Team="maclaren",
-        //        DriverNumber=240
-        //    },
-            
-        //           };
+      
 
+        private readonly IUnitOfWork _unitOfWork;
 
-
-
-
-        //after doing dbcontext
-
-        private readonly ApiDbContext _context;
-
-        public DriverssController(ApiDbContext context)
+        public DriverssController(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpGet]
@@ -56,8 +27,7 @@ namespace CrudRepositoryPattern.Controllers
 
         public async Task < IActionResult> GetDrivers()
         {
-          //  return Ok (_drivers);
-            return Ok (await _context.Drivers.ToListAsync());
+            return Ok (await _unitOfWork.Drivers.All());
 
         }
 
@@ -65,9 +35,8 @@ namespace CrudRepositoryPattern.Controllers
         [Route("get-by-id")]
         public async Task <IActionResult> GetById(int id)
         {
-           // return Ok(_drivers.FirstOrDefault(x => x.Id == id));
 
-            var driver=await _context.Drivers.FirstOrDefaultAsync(x => x.Id == id);
+            var driver = await _unitOfWork.Drivers.GetById(id);
 
             if (driver==null) return NotFound();
 
@@ -75,25 +44,13 @@ namespace CrudRepositoryPattern.Controllers
 
         }
 
-        //[HttpGet]
-        //[Route("get-by-id")]
-        //public IActionResult GetById(int driverId)
-        //{
-        //    var driver = _drivers.Find(x => x.Id == driverId);
-        //    if (driver == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    return Ok(driver);
-        //}
-
+      
         [HttpPost]
         [Route("AddDriver")]
         public async Task <IActionResult> AddDriver(Driver driver)
         {
-            // _drivers.Add(driver);
-            _context.Drivers.Add(driver);
-            await _context.SaveChangesAsync();
+           await _unitOfWork.Drivers.Add(driver);
+            await _unitOfWork.CompleteAsync();
             return Ok();
         }
 
@@ -103,15 +60,12 @@ namespace CrudRepositoryPattern.Controllers
         public async Task<IActionResult> DeleteDriver(int id)
         {
 
-            //var Del=_drivers.FirstOrDefault(x => x.Id == id);
-            //if(Del == null) return NotFound();
-            //_drivers.Remove(Del);
-            //return NoContent ();
+        
 
-            var driver = await _context.Drivers.FirstOrDefaultAsync(x => x.Id == id);
+            var driver = await _unitOfWork.Drivers.GetById(id);
             if (driver == null) return NotFound();
-            _context.Drivers.Remove(driver);
-            await _context.SaveChangesAsync();
+           await _unitOfWork.Drivers.Delete(driver);
+            await _unitOfWork.CompleteAsync();
             return NoContent();
         }
 
@@ -123,20 +77,13 @@ namespace CrudRepositoryPattern.Controllers
         public async Task < IActionResult> UpdateDriver(Driver driver)
         {
 
-            //var existDriver = _drivers.FirstOrDefault(x => x.Id ==driver.Id );
-            //if (existDriver == null) return NotFound();
-            //existDriver.Name = driver.Name;
-            //existDriver.Team=driver.Team;
-            //existDriver.DriverNumber=driver.DriverNumber;
-            //return NoContent();
+          
 
-            var existDriver = await _context.Drivers.FirstOrDefaultAsync(x => x.Id ==driver.Id );
+            var existDriver = await _unitOfWork.Drivers.GetById(driver.Id );
             if (existDriver == null) return NotFound();
-            existDriver.Name = driver.Name;
-            existDriver.Team = driver.Team;
-            existDriver.DriverNumber = driver.DriverNumber;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.Drivers.Update(driver);
+            await _unitOfWork.CompleteAsync();
             return NoContent();
 
 
